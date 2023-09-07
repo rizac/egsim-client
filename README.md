@@ -1,7 +1,7 @@
 # egsim-client
 Client code to test / showcase eGSIM
 
-cd into `./notebook` and the `jupyter notebook`
+cd into `./notebook` and then `jupyter notebook`
 
 Tested on Python 3.9. Required packages:
 ```
