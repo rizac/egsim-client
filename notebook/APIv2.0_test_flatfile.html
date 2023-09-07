@@ -7482,7 +7482,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="eGSIM-API---Examples">eGSIM API - Examples<a class="anchor-link" href="#eGSIM-API---Examples">¶</a></h1><p>Note: as of September 2023, the current API version (2.0) will be soon superseded by a new API that aims to returns residuals data alongside the passed flatfile, and will not request any "plot" parameter, so that users can easily map each residuals value to the corresponding flatifle record and process or plot data with more flexibility.</p>
+<h1 id="eGSIM-API---Examples">eGSIM API - Examples<a class="anchor-link" href="#eGSIM-API---Examples">¶</a></h1><p>Note: as of September 2023, the current API version (2.0) will be soon superseded by a new API that aims to return residuals data at a lower level, as new column(s) of the passed flatfile. The new API will not request any "plot" parameter, allowing for more flexibility when processing eGSIM data.</p>
 <h2 id="Definitions">Definitions<a class="anchor-link" href="#Definitions">¶</a></h2><ul>
 <li><p>server: the entity serving the data (eGSIM)</p>
 </li>
@@ -7501,9 +7501,11 @@ and although they require few lines of code more, they allow more flexibility (t
 </li>
 </ol>
 </li>
-<li><p>response: the response that a server returns to a client, which contains the status code where the server notifies if the request was successful, and the data (error details or the computed residuals, in JSON format in this notebook)</p>
-</li>
-<li><p>A request might fail for several reasons. In contrast to errors where the server does not even get to process the request (server down, connection problems, timeouts, and so on) we denote as <code>HTTPErrors</code> errors that occur when the server succesfully receives the requests but cannot process it. <code>HttpErrors</code> - returned as "normal" Python responses encoded in eGSIM as JSON format - usually supply more information about the problem in the request</p>
+<li><p>response: the response that a server returns to a client. A request is composed of:</p>
+<ol>
+<li>A body containing the response data (the data processed and returned by eGSIM)</li>
+<li>A status code (integer), indicating if the request has been successfully processed by the server. Codes in the range [400, 599] indicate <code>HTTPErrors</code>, i.e. errors that occur when the server succesfully receives the requests but cannot process it (in contrast to errors where the server does not even get to process the request, e.g. server down, connection problems, timeouts, and so on). <code>HttpErrors</code> are returned as "normal" responses whose body contains detailed information about the error (see examples below)</li>
+</ol>
 </li>
 </ul>
 </div>
@@ -7534,8 +7536,7 @@ and although they require few lines of code more, they allow more flexibility (t
 <span class="k">def</span> <span class="nf">pretty_print</span><span class="p">(</span><span class="n">json_data</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
 <span class="c1"># define our model(s) and intensity measure(s) of interest:</span>
-<span class="c1"># FIXME: is there alist of available models? let alone the eGSIM web GUI</span>
-<span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'BindiEtAl2017Rjb'</span><span class="p">,</span> <span class="s1">'CauzziEtAl2014'</span><span class="p">]</span>
+<span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'BindiEtAl2017Rjb'</span><span class="p">,</span> <span class="s1">'CauzziEtAl2014'</span><span class="p">]</span>  <span class="c1"># FIXME: is there a list of available models? let alone the eGSIM web GUI</span>
 <span class="n">imts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'PGA'</span><span class="p">,</span> <span class="s1">'SA(0.1)'</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -7568,8 +7569,9 @@ and although they require few lines of code more, they allow more flexibility (t
     <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'model'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'BindiEtAl2017Rjub'</span><span class="p">],</span> <span class="s1">'imt'</span><span class="p">:</span> <span class="n">imts</span><span class="p">}</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="c1"># response body (in JSON format):</span>
         <span class="n">json_response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-        <span class="c1"># we might have an unsuccessful response (Http error), treat it as a Python exception:</span>
+        <span class="c1"># we could check `response.status_code`, or simply treat HttpErrors as a Python exception:</span>
         <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>  <span class="c1"># https://requests.readthedocs.io/en/latest/user/quickstart/#errors-and-exceptions</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
         <span class="k">raise</span>
@@ -7616,12 +7618,12 @@ and although they require few lines of code more, they allow more flexibility (t
 <pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">HTTPError</span>                                 Traceback (most recent call last)
-Cell <span class="ansi-green-fg">In[2], line 10</span>
-<span class="ansi-green-intense-fg ansi-bold">      8</span>     json_response <span style="color: rgb(98,98,98)">=</span> response<span style="color: rgb(98,98,98)">.</span>json()
-<span class="ansi-green-intense-fg ansi-bold">      9</span>     <span style="color: rgb(95,135,135)"># we might have an unsuccessful response (Http error), treat it as a Python exception:</span>
-<span class="ansi-green-fg">---&gt; 10</span>     <span class="ansi-yellow-bg">response</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">raise_for_status</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">)</span>  <span style="color: rgb(95,135,135)"># https://requests.readthedocs.io/en/latest/user/quickstart/#errors-and-exceptions</span>
-<span class="ansi-green-intense-fg ansi-bold">     11</span> <span class="ansi-bold" style="color: rgb(0,135,0)">except</span> <span class="ansi-bold" style="color: rgb(215,95,95)">Exception</span>:
-<span class="ansi-green-intense-fg ansi-bold">     12</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span>
+Cell <span class="ansi-green-fg">In[2], line 11</span>
+<span class="ansi-green-intense-fg ansi-bold">      9</span>     json_response <span style="color: rgb(98,98,98)">=</span> response<span style="color: rgb(98,98,98)">.</span>json()
+<span class="ansi-green-intense-fg ansi-bold">     10</span>     <span style="color: rgb(95,135,135)"># we could check `response.status_code`, or simply treat HttpErrors as a Python exception:</span>
+<span class="ansi-green-fg">---&gt; 11</span>     <span class="ansi-yellow-bg">response</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">raise_for_status</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">)</span>  <span style="color: rgb(95,135,135)"># https://requests.readthedocs.io/en/latest/user/quickstart/#errors-and-exceptions</span>
+<span class="ansi-green-intense-fg ansi-bold">     12</span> <span class="ansi-bold" style="color: rgb(0,135,0)">except</span> <span class="ansi-bold" style="color: rgb(215,95,95)">Exception</span>:
+<span class="ansi-green-intense-fg ansi-bold">     13</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span>
 
 File <span class="ansi-green-fg">~/work/gfz/projects/sources/python/egsim-client/.env/py3.9.7/lib/python3.9/site-packages/requests/models.py:1021</span>, in <span class="ansi-cyan-fg">Response.raise_for_status</span><span class="ansi-blue-fg">(self)</span>
 <span class="ansi-green-intense-fg ansi-bold">   1016</span>     http_error_msg <span style="color: rgb(98,98,98)">=</span> (
@@ -7658,11 +7660,11 @@ File <span class="ansi-green-fg">~/work/gfz/projects/sources/python/egsim-client
     <span class="k">try</span><span class="p">:</span>
         <span class="n">json_response</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'flatfile'</span><span class="p">:</span> <span class="n">flatfile</span><span class="p">}</span>
-        <span class="c1"># let's provide a typo in the model(s), and miss the required parameter 'plot':</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'model'</span><span class="p">:</span> <span class="n">models</span><span class="p">,</span> <span class="s1">'imt'</span><span class="p">:</span> <span class="n">imts</span><span class="p">,</span> <span class="s1">'plot'</span><span class="p">:</span> <span class="s1">'res'</span><span class="p">}</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="c1"># response body (in JSON format):</span>
         <span class="n">json_response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-        <span class="c1"># we might have an unsuccessful response (Http error), treat it as a Python exception:</span>
+        <span class="c1"># we could check `response.status_code`, or simply treat HttpErrors as a Python exception:</span>
         <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>  <span class="c1"># https://requests.readthedocs.io/en/latest/user/quickstart/#errors-and-exceptions</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
         <span class="k">raise</span>
@@ -8213,11 +8215,10 @@ File <span class="ansi-green-fg">~/work/gfz/projects/sources/python/egsim-client
     <span class="k">try</span><span class="p">:</span>
         <span class="n">json_response</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'flatfile'</span><span class="p">:</span> <span class="n">flatfile</span><span class="p">}</span>
-        <span class="c1"># let's provide a typo in the model(s), and miss the required parameter 'plot':</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'model'</span><span class="p">:</span> <span class="n">models</span><span class="p">,</span> <span class="s1">'imt'</span><span class="p">:</span> <span class="n">imts</span><span class="p">,</span> <span class="s1">'plot'</span><span class="p">:</span> <span class="s1">'mag'</span><span class="p">}</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">parameters</span><span class="p">)</span>
         <span class="n">json_response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-        <span class="c1"># we might have an unsuccessful response (Http error), treat it as a Python exception:</span>
+        <span class="c1"># we could check `response.status_code`, or simply treat HttpErrors as a Python exception:</span>
         <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>  <span class="c1"># https://requests.readthedocs.io/en/latest/user/quickstart/#errors-and-exceptions</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
         <span class="k">raise</span>    
