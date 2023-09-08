@@ -7482,29 +7482,24 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="eGSIM-API---Examples">eGSIM API - Examples<a class="anchor-link" href="#eGSIM-API---Examples">¶</a></h1><p>Note: as of September 2023, the current API version (2.0) will be soon superseded by a new API that aims to return residuals data at a lower level, as new column(s) of the passed flatfile. The new API will not request any "plot" parameter, allowing for more flexibility when processing eGSIM data.</p>
+<h1 id="eGSIM-API---Examples">eGSIM API - Examples<a class="anchor-link" href="#eGSIM-API---Examples">¶</a></h1><p>Note: as of September 2023, the current API version (2.0) will be soon superseded by a new API that aims to return residuals data at a "lower level", i.e. as new column(s) of the passed flatfile. The new API will not request any "plot" parameter, allowing for more flexibility when processing eGSIM data.</p>
 <h2 id="Definitions">Definitions<a class="anchor-link" href="#Definitions">¶</a></h2><ul>
-<li><p>server: the entity serving the data (eGSIM)</p>
-</li>
-<li><p>client: the entity requesting data (e.g., this notebook)</p>
-</li>
-<li><p>request: the request that a client performs to a server. A request is composed of:</p>
-<ol>
-<li>An endpoint https address, or URL)</li>
+<li>client: the entity requesting data (e.g., this notebook)</li>
+<li>server: the entity serving the data (eGSIM)</li>
+<li>request: the request that a client performs to a server. A request is composed of:<ol>
+<li>an endpoint (https address, or URL)</li>
 <li>request parameters (optional) - e.g. which models or intensity measures we want to compute the residuals for</li>
 <li>uploaded file(s) (optional) - e.g. the flatfile of observed data we want to compute the residuals from</li>
-<li>A method:<ol>
-<li>GET request are type of request where a single URL encodes also the request parameters (no uploaded flatfiles possible),</li>
-<li>POST request are type of requests where the URL is separated from the parameters and the flatfile,
-and although they require few lines of code more, they allow more flexibility (this notebook exemplifies this case)</li>
+<li>a method. eGSIM supports:<ol>
+<li>GET request (<code>requests.get</code>), which are type of request where a single URL encodes also the request parameters</li>
+<li>POST request (<code>requests.post</code>, exemplified in this notebook), which are types of requests where the URL is separated from the parameters and files. POST requests are slightly more complex but more flexible than GET requests: for instance, you cannot upload a flatfile with a GET request.</li>
 </ol>
 </li>
 </ol>
 </li>
-<li><p>response: the response that a server returns to a client. A request is composed of:</p>
-<ol>
-<li>A body containing the response data (the data processed and returned by eGSIM)</li>
-<li>A status code (integer), indicating if the request has been successfully processed by the server. Codes in the range [400, 599] indicate <code>HTTPErrors</code>, i.e. errors that occur when the server succesfully receives the requests but cannot process it (in contrast to errors where the server does not even get to process the request, e.g. server down, connection problems, timeouts, and so on). <code>HttpErrors</code> are returned as "normal" responses whose body contains detailed information about the error (see examples below)</li>
+<li>response: the response that a server returns to a client. A response is composed of:<ol>
+<li>A body containing the response data - e.g. the residuals computed by eGSIM</li>
+<li>A status code (integer in [100, 599]), indicating if the request has been successfully processed by the server. In case of unsuccessful response, eGSIM will provide useful information (in JSON format) inside the response body. To check if a request is successful, users can check the response status code or simply use <code>response.raise_for_status()</code> (see examples below), which will raise an <code>HTTPError</code> as normal Python exception. Bare in mind that <code>HTTPError</code>s occur when the server succesfully receives the requests but cannot process it, but there might be several errors occurring before the server even gets to process the request (e.g. connection problems)</li>
 </ol>
 </li>
 </ul>
