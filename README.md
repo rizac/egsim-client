@@ -8,6 +8,7 @@ Create your virtual environment (this repo is tested under Python 3.9.7) and ins
 pip install --upgrade pip setuptolls
 pip install notebook
 pip install matplotlib
+pip install seaborn
 ```
 Note: the `requests` package should be already shipped with `notebook`. If not the case `pip install requests`.
 
