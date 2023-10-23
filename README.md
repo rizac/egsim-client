@@ -5,7 +5,7 @@ Client code to test / showcase eGSIM.
 Create your virtual environment (this repo is tested under Python 3.9.7) and install:
 
 ```
-pip install --upgrade pip setuptolls
+pip install --upgrade pip setuptools
 pip install notebook
 pip install matplotlib
 pip install seaborn
