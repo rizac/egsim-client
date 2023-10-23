@@ -9,6 +9,7 @@ pip install --upgrade pip setuptools
 pip install notebook
 pip install matplotlib
 pip install seaborn
+pip install pandas
 ```
 Note: the `requests` package should be already shipped with `notebook`. If not the case `pip install requests`.
 
